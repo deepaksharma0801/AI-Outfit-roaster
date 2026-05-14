@@ -1,0 +1,23 @@
+{
+  "name": "dripjudge-ai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Production-grade multimodal AI fashion analysis platform.",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "build:web": "npm --workspace apps/web run build",
+    "lint:web": "npm --workspace apps/web run lint",
+    "typecheck:web": "npm --workspace apps/web run typecheck",
+    "test:api": "pytest apps/api/app/tests",
+    "compose:up": "docker compose up --build",
+    "compose:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=20.11.0",
+    "npm": ">=10.0.0",
+    "python": ">=3.12"
+  }
+}
