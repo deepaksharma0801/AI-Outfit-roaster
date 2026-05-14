@@ -105,18 +105,18 @@ Wtf is that outfit, every piece is arguing and somehow they are all losing.
 
 ```mermaid
 flowchart LR
-  user["User uploads outfit"] --> web["Next.js web app"]
-  web --> api["FastAPI API"]
-  api --> image["Image validation and compression"]
-  image --> graph["LangGraph analysis flow"]
-  graph --> vision["OpenAI vision analyzer or fallback analyzer"]
-  graph --> embed["CLIP-compatible image embedding"]
-  vision --> contract["Strict OutfitAnalysis JSON"]
-  embed --> repo["Outfit repository"]
-  contract --> repo
-  repo --> postgres["Postgres + pgvector"]
-  repo --> memory["In-memory fallback"]
-  api --> web
+  upload["User uploads outfit"] --> webApp["Next.js web app"]
+  webApp --> apiService["FastAPI API"]
+  apiService --> imagePipeline["Image validation and compression"]
+  imagePipeline --> analysisFlow["LangGraph analysis flow"]
+  analysisFlow --> visionAnalyzer["OpenAI vision analyzer or fallback analyzer"]
+  analysisFlow --> embeddingService["CLIP-compatible image embedding"]
+  visionAnalyzer --> jsonContract["Strict OutfitAnalysis JSON"]
+  embeddingService --> outfitRepo["Outfit repository"]
+  jsonContract --> outfitRepo
+  outfitRepo --> postgresStore["Postgres + pgvector"]
+  outfitRepo --> memoryStore["In-memory fallback"]
+  apiService --> webApp
 ```
 
 The backend is database-first when Postgres is available. If Postgres is not running, it gracefully falls back to the in-memory history store so local demos still work.
