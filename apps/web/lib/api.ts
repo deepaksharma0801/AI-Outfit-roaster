@@ -1,12 +1,17 @@
-import type { AnalyzeResponse, OutfitAnalysis, OutfitRecord, StyleHistory } from "@/lib/types";
+import type { AnalyzeResponse, OutfitAnalysis, OutfitRecord, RoastLevel, StyleHistory } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
-export async function analyzeFits(files: File[], userId = "demo-user"): Promise<AnalyzeResponse> {
+export async function analyzeFits(
+  files: File[],
+  userId = "demo-user",
+  roastLevel: RoastLevel = "brutal",
+): Promise<AnalyzeResponse> {
   const form = new FormData();
   files.forEach((file) => form.append("files", file));
   form.append("user_id", userId);
   form.append("async_processing", "false");
+  form.append("roast_level", roastLevel);
 
   const response = await fetch(`${API_BASE_URL}/api/v1/outfits/analyze`, {
     method: "POST",
@@ -36,7 +41,28 @@ export async function fetchStyleHistory(userId = "demo-user"): Promise<StyleHist
   return response.json() as Promise<StyleHistory>;
 }
 
-export function demoAnalyze(files: Array<{ id: string; previewUrl: string }>): AnalyzeResponse {
+const demoRoasts: Record<RoastLevel, string> = {
+  chill: "This fit is trying. It has the energy of a decent draft that still needs notes.",
+  spicy: "Bro this fit has airplane-mode confidence. It exists, but it is not connecting.",
+  brutal: "Bro what is this fit, a loading screen with shoes? The outfit is giving default settings.",
+  nuclear: "Wtf is that outfit, every piece is arguing and somehow they are all losing.",
+};
+
+const demoExplanations: Record<RoastLevel, string> = {
+  chill:
+    "The base is workable, but the outfit needs one sharper focal point so it feels styled instead of merely assembled.",
+  spicy:
+    "The fit is not cooked beyond saving, but the silhouette and accessories need to stop acting like optional side quests.",
+  brutal:
+    "The outfit is not dead, but it is absolutely on life support. Pick a stronger silhouette, repeat one accent, and stop letting the accessories ghost the whole look.",
+  nuclear:
+    "The fit needs a full emergency patch: one hero layer, cleaner proportions, and a color decision that was made before leaving the house.",
+};
+
+export function demoAnalyze(
+  files: Array<{ id: string; previewUrl: string }>,
+  roastLevel: RoastLevel = "brutal",
+): AnalyzeResponse {
   const baseScore = 7.2 + Math.min(files.length, 3) * 0.2;
   const analysis: OutfitAnalysis = {
     style: "streetwear",
@@ -66,9 +92,8 @@ export function demoAnalyze(files: Array<{ id: string; previewUrl: string }>): A
       { title: "Palette discipline", detail: "The colors feel controlled instead of chaotic." },
       { title: "Easy upgrade path", detail: "A few styling choices can move this from fine to feed-worthy." },
     ],
-    roast: "This outfit has LinkedIn profile picture confidence with TikTok draft energy.",
-    explanation:
-      "The look has a clean base and enough restraint to build on. Push silhouette, texture, or accessories so the outfit reads intentional on camera.",
+    roast: demoRoasts[roastLevel],
+    explanation: demoExplanations[roastLevel],
     recommendations: [
       { title: "Add a technical outer layer", reason: "It gives the silhouette more architecture.", priority: 5 },
       { title: "Repeat an accent color", reason: "Color repetition makes the outfit feel styled.", priority: 4 },
@@ -87,7 +112,7 @@ export function demoAnalyze(files: Array<{ id: string; previewUrl: string }>): A
       },
     ],
     color_palette: ["#181d24", "#f5f0e8", "#7de2d1", "#ff6f61", "#c6ff4a"],
-    tags: ["streetwear", "techwear", "upgradeable", "camera-ready"],
+    tags: ["streetwear", "techwear", "upgradeable", "camera-ready", `roast:${roastLevel}`],
   };
 
   return {

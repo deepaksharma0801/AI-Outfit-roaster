@@ -10,6 +10,7 @@ from app.schemas.outfit import (
     DetectedItem,
     OutfitAnalysis,
     Recommendation,
+    RoastLevel,
     StyleIssue,
     StyleStrength,
 )
@@ -17,9 +18,61 @@ from app.services.image_pipeline import ProcessedImage
 
 
 SYSTEM_PROMPT = """You are DripJudge AI, a multimodal fashion critic.
-Analyze the outfit with useful styling intelligence and witty internet humor.
-Return only valid JSON matching the requested schema. Roasts should be funny, not cruel.
-Avoid protected-class insults, body shaming, or sexual comments."""
+Analyze the outfit with useful styling intelligence and internet-native roast comedy.
+Return only valid JSON matching the requested schema.
+The roast may be savage, direct, and slangy, but it must only attack the outfit, styling choices,
+colors, proportions, layering, accessories, and overall vibe.
+Never body-shame. Never insult protected classes, age, race, gender, disability, religion, sexuality,
+body type, poverty, or the person wearing the clothes. No sexual comments."""
+
+
+ROAST_GUIDES = {
+    RoastLevel.chill: (
+        "Roast level: CHILL. Keep it playful and useful. One clever jab, no profanity. "
+        "The roast should feel like a stylish friend nudging them."
+    ),
+    RoastLevel.spicy: (
+        "Roast level: SPICY. TikTok comment energy. Be sharper, punchier, and more meme-aware. "
+        "A little 'bro' energy is welcome, but keep it outfit-only."
+    ),
+    RoastLevel.brutal: (
+        "Roast level: BRUTAL. The user asked for damage. Use direct lines like 'bro what is this fit' "
+        "or 'this outfit is fighting for its life' when appropriate. Be funny, harsh, and specific. "
+        "Profanity is allowed sparingly. Still outfit-only, no body or identity insults."
+    ),
+    RoastLevel.nuclear: (
+        "Roast level: NUCLEAR. Maximum comedy violence toward the clothes. Make it quotable, ruthless, "
+        "and short enough to screenshot. Profanity is allowed sparingly. Still outfit-only, no body or "
+        "identity insults."
+    ),
+}
+
+FALLBACK_ROASTS = {
+    RoastLevel.chill: {
+        "low_contrast": "This fit is trying to whisper, but the room is already silent.",
+        "high_contrast": "The outfit has energy, it just needs a manager before it starts yelling.",
+        "dark": "This look has stealth mode unlocked, but somebody forgot to add the plot.",
+        "bright": "The fit is cheerful, but it is one accent away from looking accidentally loud.",
+    },
+    RoastLevel.spicy: {
+        "low_contrast": "Bro this fit has airplane-mode confidence. It exists, but it is not connecting.",
+        "high_contrast": "This outfit walked in with main-character music and tripped over the beat.",
+        "dark": "This is not mysterious, this is laundry basket noir.",
+        "bright": "The palette said 'trust the process' and then left the group chat.",
+    },
+    RoastLevel.brutal: {
+        "low_contrast": "Bro what is this fit, a loading screen with shoes? The outfit is giving default settings.",
+        "high_contrast": "Bro this fit got dressed by spinning a wheel and losing twice. The colors are beefing in public.",
+        "dark": "Wtf is this outfit, undercover couch-core? It looks like the closet rage-quit halfway through.",
+        "bright": "This fit is loud for no reason, like it learned color theory from a warning label.",
+    },
+    RoastLevel.nuclear: {
+        "low_contrast": "Bro this outfit has the charisma of an unseasoned screenshot. Delete the draft and respawn.",
+        "high_contrast": "Wtf is that outfit, every piece is arguing and somehow they are all losing.",
+        "dark": "This fit looks like it got assembled during a power outage and nobody checked the footage.",
+        "bright": "This outfit is a visual jump scare. The palette is committing crimes with confidence.",
+    },
+}
 
 
 JSON_SCHEMA = {
@@ -140,13 +193,13 @@ class VisionAnalyzer:
         self.settings = settings
         self.client = AsyncOpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else None
 
-    async def analyze(self, image: ProcessedImage) -> OutfitAnalysis:
+    async def analyze(self, image: ProcessedImage, roast_level: RoastLevel = RoastLevel.brutal) -> OutfitAnalysis:
         if not self.client:
-            return self._fallback_analysis(image)
+            return self._fallback_analysis(image, roast_level)
 
         response = await self.client.chat.completions.create(
             model=self.settings.openai_model,
-            temperature=0.45,
+            temperature=0.72 if roast_level in {RoastLevel.brutal, RoastLevel.nuclear} else 0.52,
             response_format={"type": "json_schema", "json_schema": JSON_SCHEMA},
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -158,7 +211,10 @@ class VisionAnalyzer:
                             "text": (
                                 "Analyze this outfit for detected garments, style, aesthetic consistency, "
                                 "colors, fit coordination, accessories, layering, mistakes, strengths, "
-                                "a roast, and practical upgrade recommendations."
+                                "a roast, and practical upgrade recommendations. "
+                                f"{ROAST_GUIDES[roast_level]} "
+                                "Make the roast one to two sentences max, brutally specific to the visible outfit, "
+                                "then keep the explanation and recommendations genuinely useful."
                             ),
                         },
                         {"type": "image_url", "image_url": {"url": image.data_url}},
@@ -169,13 +225,14 @@ class VisionAnalyzer:
         content = response.choices[0].message.content or "{}"
         return OutfitAnalysis.model_validate(json.loads(content))
 
-    def _fallback_analysis(self, image: ProcessedImage) -> OutfitAnalysis:
+    def _fallback_analysis(self, image: ProcessedImage, roast_level: RoastLevel = RoastLevel.brutal) -> OutfitAnalysis:
         palette = self._dominant_palette(image.content)
         brightness = self._palette_brightness(palette)
         contrast = self._palette_contrast(palette)
         style = "streetwear" if contrast > 80 else "minimal casual"
         aesthetic = "clean-core" if brightness > 125 else "soft techwear"
         score = min(9.1, max(5.6, 6.4 + contrast / 120 + (abs(brightness - 128) / 180)))
+        roast_key = self._roast_key(brightness, contrast)
 
         return OutfitAnalysis(
             style=style,
@@ -211,7 +268,7 @@ class VisionAnalyzer:
                     detail="The outfit has enough restraint to be styled up without rebuilding from zero.",
                 ),
             ],
-            roast="This fit is not bad, it is just buffering at 78 percent main-character energy.",
+            roast=FALLBACK_ROASTS[roast_level][roast_key],
             explanation=(
                 "The outfit works as a practical base. To make it memorable, sharpen one variable: "
                 "silhouette, texture, color contrast, or accessories."
@@ -246,8 +303,17 @@ class VisionAnalyzer:
                 ),
             ],
             color_palette=palette,
-            tags=[style, aesthetic, "camera-ready", "upgradeable"],
+            tags=[style, aesthetic, "camera-ready", "upgradeable", f"roast:{roast_level.value}"],
         )
+
+    def _roast_key(self, brightness: float, contrast: float) -> str:
+        if contrast > 95:
+            return "high_contrast"
+        if contrast < 45:
+            return "low_contrast"
+        if brightness < 105:
+            return "dark"
+        return "bright"
 
     def _dominant_palette(self, image_bytes: bytes) -> list[str]:
         image = Image.open(__import__("io").BytesIO(image_bytes)).convert("RGB")

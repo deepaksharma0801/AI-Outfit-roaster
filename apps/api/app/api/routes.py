@@ -7,7 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.core.errors import ImageValidationError, bad_upload
 from app.db.session import get_db
-from app.schemas.outfit import AnalyzeOutfitResponse, OutfitRecordResponse, OutfitStatus, StyleHistoryResponse
+from app.schemas.outfit import (
+    AnalyzeOutfitResponse,
+    OutfitRecordResponse,
+    OutfitStatus,
+    RoastLevel,
+    StyleHistoryResponse,
+)
 from app.services.clip_embeddings import ClipEmbeddingService
 from app.services.image_pipeline import ImagePipeline
 from app.services.outfit_repository import OutfitRepository
@@ -32,6 +38,7 @@ async def analyze_outfits(
     db: Annotated[AsyncSession, Depends(get_db)],
     user_id: Annotated[str, Form()] = "demo-user",
     async_processing: Annotated[bool, Form()] = False,
+    roast_level: Annotated[RoastLevel, Form()] = RoastLevel.brutal,
 ) -> AnalyzeOutfitResponse:
     batch_id = uuid4()
     results: list[OutfitRecordResponse] = []
@@ -55,11 +62,11 @@ async def analyze_outfits(
                 image_sha256=processed.sha256,
                 image_preview_url=preview_url,
             )
-            background_tasks.add_task(_process_background, record_id, user_id, processed)
+            background_tasks.add_task(_process_background, record_id, user_id, processed, roast_level)
             results.append(queued)
             continue
 
-        analysis, embedding = await analysis_graph.run(processed)
+        analysis, embedding = await analysis_graph.run(processed, roast_level)
         results.append(
             await repository.add_completed(
                 record_id=record_id,
@@ -95,8 +102,8 @@ async def get_style_history(
     return await OutfitRepository(db, style_history_store).summary(user_id)
 
 
-async def _process_background(record_id, user_id: str, processed) -> None:
-    analysis, _embedding = await analysis_graph.run(processed)
+async def _process_background(record_id, user_id: str, processed, roast_level: RoastLevel) -> None:
+    analysis, _embedding = await analysis_graph.run(processed, roast_level)
     style_history_store.add(
         record_id=record_id,
         user_id=user_id,

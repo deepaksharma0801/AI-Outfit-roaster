@@ -18,7 +18,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { analyzeFits, demoAnalyze, fetchHistory, fetchStyleHistory } from "@/lib/api";
-import type { OutfitRecord, StyleHistory } from "@/lib/types";
+import type { OutfitRecord, RoastLevel, StyleHistory } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { cn, scoreLabel } from "@/lib/utils";
 
@@ -30,6 +30,13 @@ type FitUpload = {
 
 const userId = "demo-user";
 
+const roastLevels: Array<{ value: RoastLevel; label: string }> = [
+  { value: "chill", label: "Chill" },
+  { value: "spicy", label: "Spicy" },
+  { value: "brutal", label: "Brutal" },
+  { value: "nuclear", label: "Nuclear" },
+];
+
 export function DripJudgeApp() {
   const [uploads, setUploads] = useState<FitUpload[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -38,6 +45,7 @@ export function DripJudgeApp() {
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [statusText, setStatusText] = useState("Ready");
+  const [roastLevel, setRoastLevel] = useState<RoastLevel>("brutal");
   const [cameraOpen, setCameraOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -78,19 +86,20 @@ export function DripJudgeApp() {
     if (!uploads.length) return;
 
     setLoading(true);
-    setStatusText("Judging the fit");
+    setStatusText(roastLevel === "nuclear" ? "Charging roast" : "Judging the fit");
 
     try {
       const response = await analyzeFits(
         uploads.map((upload) => upload.file),
         userId,
+        roastLevel,
       );
       setRecords(response.results);
       setActiveId(response.results[0]?.id ?? null);
       setStatusText("Analysis complete");
       await refreshHistory();
     } catch {
-      const response = demoAnalyze(uploads);
+      const response = demoAnalyze(uploads, roastLevel);
       setRecords(response.results);
       setActiveId(response.results[0]?.id ?? null);
       setStatusText("Demo analysis loaded");
@@ -135,6 +144,8 @@ export function DripJudgeApp() {
               dragging={dragging}
               uploads={uploads}
               loading={loading}
+              roastLevel={roastLevel}
+              onRoastLevelChange={setRoastLevel}
               onDragState={setDragging}
               onFiles={addFiles}
               onAnalyze={() => void runAnalysis()}
@@ -160,7 +171,7 @@ export function DripJudgeApp() {
           </motion.section>
 
           <aside className="flex min-h-[620px] flex-col gap-4">
-            <InsightPanel record={activeRecord} />
+            <InsightPanel record={activeRecord} roastLevel={roastLevel} />
             <HistoryPanel history={history} records={records} activeId={activeId} onSelect={setActiveId} />
           </aside>
         </section>
@@ -179,6 +190,8 @@ function UploadDock({
   dragging,
   uploads,
   loading,
+  roastLevel,
+  onRoastLevelChange,
   onDragState,
   onFiles,
   onAnalyze,
@@ -189,6 +202,8 @@ function UploadDock({
   dragging: boolean;
   uploads: FitUpload[];
   loading: boolean;
+  roastLevel: RoastLevel;
+  onRoastLevelChange: (level: RoastLevel) => void;
   onDragState: (dragging: boolean) => void;
   onFiles: (files: FileList | File[]) => Promise<void>;
   onAnalyze: () => void;
@@ -237,6 +252,31 @@ function UploadDock({
         <span className="font-mono text-xs text-bone/45">{uploads.length}/6</span>
       </div>
 
+      <div className="mt-4">
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase text-bone/60">Roast intensity</h3>
+          <span className="font-mono text-xs uppercase text-coral">{roastLevel}</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 rounded-md border border-bone/10 bg-bone/[0.04] p-1">
+          {roastLevels.map((level) => (
+            <button
+              key={level.value}
+              type="button"
+              aria-pressed={roastLevel === level.value}
+              onClick={() => onRoastLevelChange(level.value)}
+              className={cn(
+                "h-9 rounded-md text-xs font-black uppercase transition",
+                roastLevel === level.value
+                  ? "bg-coral text-ink shadow-panel"
+                  : "text-bone/58 hover:bg-bone/10 hover:text-bone",
+              )}
+            >
+              {level.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="mt-3 grid gap-2">
         <AnimatePresence initial={false}>
           {uploads.map((upload) => (
@@ -268,7 +308,7 @@ function UploadDock({
       <div className="mt-auto pt-4">
         <Button type="button" className="h-12 w-full" variant="default" disabled={!uploads.length || loading} onClick={onAnalyze}>
           {loading ? <Loader2 className="animate-spin" size={18} aria-hidden="true" /> : <Zap size={18} aria-hidden="true" />}
-          Judge Fit
+          {roastLevel === "nuclear" ? "Cook Fit" : "Judge Fit"}
         </Button>
       </div>
     </div>
@@ -350,21 +390,27 @@ function EmptyStage({ loading }: { loading: boolean }) {
   );
 }
 
-function InsightPanel({ record }: { record: OutfitRecord | null }) {
+function InsightPanel({ record, roastLevel }: { record: OutfitRecord | null; roastLevel: RoastLevel }) {
   const analysis = record?.analysis;
+  const roastTone = roastToneClasses(roastLevel);
 
   return (
-    <section className="panel rounded-lg p-4">
+    <section className={cn("panel rounded-lg p-4", roastLevel === "nuclear" && "border-coral/50")}>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-sm font-black uppercase text-bone/60">Judgement</h2>
+        <h2 className="text-sm font-black uppercase text-bone/60">Fit trial</h2>
         <PanelRight size={18} className="text-coral" aria-hidden="true" />
       </div>
 
       {analysis ? (
         <div className="space-y-4">
-          <div className="rounded-md bg-coral p-4 text-ink">
-            <p className="text-sm font-black uppercase">Roast</p>
-            <p className="mt-2 text-lg font-black leading-6">{analysis.roast}</p>
+          <div className={cn("rounded-md p-4", roastTone.card)}>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-black uppercase">{roastTone.title}</p>
+              <span className={cn("rounded-sm px-2 py-1 text-[10px] font-black uppercase", roastTone.badge)}>
+                {roastLevel}
+              </span>
+            </div>
+            <p className={cn("mt-3 font-black leading-7", roastTone.text)}>{analysis.roast}</p>
           </div>
 
           <p className="text-sm leading-6 text-bone/72">{analysis.explanation}</p>
@@ -395,6 +441,42 @@ function InsightPanel({ record }: { record: OutfitRecord | null }) {
       )}
     </section>
   );
+}
+
+function roastToneClasses(level: RoastLevel) {
+  if (level === "nuclear") {
+    return {
+      title: "Roast",
+      card: "bg-coral text-ink ring-2 ring-acid",
+      badge: "bg-ink text-acid",
+      text: "text-2xl",
+    };
+  }
+
+  if (level === "brutal") {
+    return {
+      title: "Roast",
+      card: "bg-coral text-ink",
+      badge: "bg-ink text-bone",
+      text: "text-xl",
+    };
+  }
+
+  if (level === "spicy") {
+    return {
+      title: "Roast",
+      card: "bg-acid text-ink",
+      badge: "bg-ink text-acid",
+      text: "text-lg",
+    };
+  }
+
+  return {
+    title: "Roast",
+    card: "bg-cyan text-ink",
+    badge: "bg-ink text-cyan",
+    text: "text-lg",
+  };
 }
 
 function InsightList({ title, items, tone }: { title: string; items: string[]; tone: "issue" | "win" | "upgrade" }) {

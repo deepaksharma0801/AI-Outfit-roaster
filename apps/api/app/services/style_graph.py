@@ -1,6 +1,7 @@
 from typing import Any, TypedDict
 
 from app.schemas.outfit import OutfitAnalysis
+from app.schemas.outfit import RoastLevel
 from app.services.clip_embeddings import ClipEmbeddingService
 from app.services.image_pipeline import ProcessedImage
 from app.services.vision import VisionAnalyzer
@@ -14,6 +15,7 @@ except ImportError:  # pragma: no cover - optional local fallback
 
 class OutfitGraphState(TypedDict, total=False):
     image: ProcessedImage
+    roast_level: RoastLevel
     analysis: OutfitAnalysis
     embedding: list[float]
 
@@ -26,12 +28,16 @@ class OutfitAnalysisGraph:
         self.embeddings = embeddings
         self.graph = self._build_graph()
 
-    async def run(self, image: ProcessedImage) -> tuple[OutfitAnalysis, list[float]]:
+    async def run(
+        self,
+        image: ProcessedImage,
+        roast_level: RoastLevel = RoastLevel.brutal,
+    ) -> tuple[OutfitAnalysis, list[float]]:
         if self.graph is not None:
-            state = await self.graph.ainvoke({"image": image})
+            state = await self.graph.ainvoke({"image": image, "roast_level": roast_level})
             return state["analysis"], state["embedding"]
 
-        analysis = await self.analyzer.analyze(image)
+        analysis = await self.analyzer.analyze(image, roast_level)
         embedding = await self.embeddings.embed_image(image.content)
         return analysis, embedding
 
@@ -40,7 +46,12 @@ class OutfitAnalysisGraph:
             return None
 
         async def analyze_node(state: OutfitGraphState) -> OutfitGraphState:
-            return {"analysis": await self.analyzer.analyze(state["image"])}
+            return {
+                "analysis": await self.analyzer.analyze(
+                    state["image"],
+                    state.get("roast_level", RoastLevel.brutal),
+                )
+            }
 
         async def embed_node(state: OutfitGraphState) -> OutfitGraphState:
             return {"embedding": await self.embeddings.embed_image(state["image"].content)}

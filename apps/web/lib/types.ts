@@ -1,3 +1,5 @@
+export type RoastLevel = "chill" | "spicy" | "brutal" | "nuclear";
+
 export type DetectedItem = {
   category: string;
   name: string;

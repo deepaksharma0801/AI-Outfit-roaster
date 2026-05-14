@@ -12,6 +12,13 @@ class OutfitStatus(str, Enum):
     failed = "failed"
 
 
+class RoastLevel(str, Enum):
+    chill = "chill"
+    spicy = "spicy"
+    brutal = "brutal"
+    nuclear = "nuclear"
+
+
 class BoundingBox(BaseModel):
     x: float = Field(ge=0, le=1)
     y: float = Field(ge=0, le=1)
