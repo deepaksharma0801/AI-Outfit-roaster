@@ -36,3 +36,21 @@ async def test_brutal_fallback_roast_is_stronger_than_chill() -> None:
 
     assert chill.roast != brutal.roast
     assert "bro" in brutal.roast.lower() or "wtf" in brutal.roast.lower()
+
+
+@pytest.mark.asyncio
+async def test_fallback_avoids_generic_watch_advice() -> None:
+    image = ImagePipeline(max_upload_bytes=1_000_000).process(make_image(), "image/jpeg")
+    analysis = await VisionAnalyzer(Settings(openai_api_key=None)).analyze(image, RoastLevel.nuclear)
+    generated_text = " ".join(
+        [
+            analysis.roast,
+            analysis.explanation,
+            *[issue.fix for issue in analysis.issues],
+            *[recommendation.reason for recommendation in analysis.recommendations],
+            *[" ".join(outfit.items) for outfit in analysis.alternate_outfits],
+        ]
+    ).lower()
+
+    assert "try a watch" not in generated_text
+    assert "silver watch" not in generated_text

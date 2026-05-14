@@ -25,6 +25,16 @@ colors, proportions, layering, accessories, and overall vibe.
 Never body-shame. Never insult protected classes, age, race, gender, disability, religion, sexuality,
 body type, poverty, or the person wearing the clothes. No sexual comments."""
 
+SPECIFICITY_INSTRUCTIONS = (
+    "Be picture-specific. The roast must call out at least one visible garment or accessory with its color, "
+    "material, placement, or shape, like 'that gray coat', 'the black hoodie', 'those white sneakers', "
+    "or 'the watch fighting for attention'. Do not give generic advice such as 'try a watch' if a watch, "
+    "bracelet, bag, cap, jewelry, or other accessory is already visible. If an accessory is visible, acknowledge "
+    "it and explain whether it helps or makes the fit worse. Every issue and recommendation must reference a "
+    "visible detail from the photo. If you are uncertain about the item type, say 'upper layer', 'outer layer', "
+    "'pants', 'shoes', or 'visible accessory' rather than inventing a wrong item."
+)
+
 
 ROAST_GUIDES = {
     RoastLevel.chill: (
@@ -49,28 +59,28 @@ ROAST_GUIDES = {
 
 FALLBACK_ROASTS = {
     RoastLevel.chill: {
-        "low_contrast": "This fit is trying to whisper, but the room is already silent.",
-        "high_contrast": "The outfit has energy, it just needs a manager before it starts yelling.",
-        "dark": "This look has stealth mode unlocked, but somebody forgot to add the plot.",
-        "bright": "The fit is cheerful, but it is one accent away from looking accidentally loud.",
+        "low_contrast": "That {top_color} upper layer is trying to whisper, but the whole fit is already silent.",
+        "high_contrast": "The {top_color} top and {accent_color} accents have energy, they just need a manager.",
+        "dark": "That {top_color} upper layer has stealth mode unlocked, but somebody forgot to add the plot.",
+        "bright": "That {top_color} top layer is cheerful, but the fit is one decision away from looking accidental.",
     },
     RoastLevel.spicy: {
-        "low_contrast": "Bro this fit has airplane-mode confidence. It exists, but it is not connecting.",
-        "high_contrast": "This outfit walked in with main-character music and tripped over the beat.",
-        "dark": "This is not mysterious, this is laundry basket noir.",
-        "bright": "The palette said 'trust the process' and then left the group chat.",
+        "low_contrast": "Bro that {top_color} upper layer has airplane-mode confidence. It exists, but it is not connecting.",
+        "high_contrast": "That {top_color} layer and {accent_color} contrast walked in with main-character music and tripped over the beat.",
+        "dark": "That {top_color} top layer is not mysterious, it is laundry-basket noir.",
+        "bright": "That {top_color} layer said 'trust the process' and then left the group chat.",
     },
     RoastLevel.brutal: {
-        "low_contrast": "Bro what is this fit, a loading screen with shoes? The outfit is giving default settings.",
-        "high_contrast": "Bro this fit got dressed by spinning a wheel and losing twice. The colors are beefing in public.",
-        "dark": "Wtf is this outfit, undercover couch-core? It looks like the closet rage-quit halfway through.",
-        "bright": "This fit is loud for no reason, like it learned color theory from a warning label.",
+        "low_contrast": "Bro what is that {top_color} upper-layer situation, a loading screen with sleeves? Take that fit back to settings.",
+        "high_contrast": "Bro that {top_color} layer and {accent_color} contrast got dressed by spinning a wheel and losing twice.",
+        "dark": "Wtf is that {top_color} upper layer, undercover couch-core? The closet rage-quit halfway through.",
+        "bright": "That {top_color} layer is loud for no reason, like it learned color theory from a warning label.",
     },
     RoastLevel.nuclear: {
-        "low_contrast": "Bro this outfit has the charisma of an unseasoned screenshot. Delete the draft and respawn.",
-        "high_contrast": "Wtf is that outfit, every piece is arguing and somehow they are all losing.",
-        "dark": "This fit looks like it got assembled during a power outage and nobody checked the footage.",
-        "bright": "This outfit is a visual jump scare. The palette is committing crimes with confidence.",
+        "low_contrast": "Bro that {top_color} upper layer has the charisma of an unseasoned screenshot. Take it off and respawn.",
+        "high_contrast": "Wtf is that {top_color} layer doing next to {accent_color}, every piece is arguing and somehow they are all losing.",
+        "dark": "That {top_color} top layer looks assembled during a power outage. Nobody checked the fit footage.",
+        "bright": "That {top_color} layer is a visual jump scare. The palette is committing crimes with confidence.",
     },
 }
 
@@ -213,6 +223,7 @@ class VisionAnalyzer:
                                 "colors, fit coordination, accessories, layering, mistakes, strengths, "
                                 "a roast, and practical upgrade recommendations. "
                                 f"{ROAST_GUIDES[roast_level]} "
+                                f"{SPECIFICITY_INSTRUCTIONS} "
                                 "Make the roast one to two sentences max, brutally specific to the visible outfit, "
                                 "then keep the explanation and recommendations genuinely useful."
                             ),
@@ -233,6 +244,12 @@ class VisionAnalyzer:
         aesthetic = "clean-core" if brightness > 125 else "soft techwear"
         score = min(9.1, max(5.6, 6.4 + contrast / 120 + (abs(brightness - 128) / 180)))
         roast_key = self._roast_key(brightness, contrast)
+        top_color = self._color_name(palette[0])
+        accent_color = self._color_name(palette[-1])
+        roast = FALLBACK_ROASTS[roast_level][roast_key].format(
+            top_color=top_color,
+            accent_color=accent_color,
+        )
 
         return OutfitAnalysis(
             style=style,
@@ -240,22 +257,28 @@ class VisionAnalyzer:
             confidence=0.74,
             drip_score=round(score, 1),
             detected_items=[
-                DetectedItem(category="top", name="primary upper layer", color=palette[0], confidence=0.68),
-                DetectedItem(category="bottom", name="coordinating lower layer", color=palette[1], confidence=0.62),
-                DetectedItem(category="shoes", name="visible footwear silhouette", color=palette[-1], confidence=0.55),
+                DetectedItem(category="top", name=f"{top_color} upper layer", color=palette[0], confidence=0.68),
+                DetectedItem(category="bottom", name=f"{self._color_name(palette[1])} lower layer", color=palette[1], confidence=0.62),
+                DetectedItem(category="shoes", name=f"{accent_color} footwear shape", color=palette[-1], confidence=0.55),
             ],
             issues=[
                 StyleIssue(
-                    title="Silhouette needs one clearer anchor",
-                    detail="The outfit reads cohesive, but the proportions could use a stronger hero piece.",
+                    title=f"That {top_color} layer needs a cleaner job",
+                    detail=(
+                        f"The visible {top_color} upper layer is carrying the fit, but it does not create a sharp "
+                        "enough silhouette or point of view."
+                    ),
                     severity=2,
-                    fix="Add a structured jacket, cropped layer, or cleaner shoe shape to create a focal point.",
+                    fix="Either make that top layer more structured or swap it for an outer layer with a cleaner shape.",
                 ),
                 StyleIssue(
-                    title="Accessory story is quiet",
-                    detail="The base fit is doing the group project while accessories are on read.",
+                    title="Visible details need to stop freeloading",
+                    detail=(
+                        "Any visible accessory or small detail should look intentional, not like it wandered into "
+                        "the photo by accident."
+                    ),
                     severity=2,
-                    fix="Try a watch, cap, bag, jewelry, or a single statement texture.",
+                    fix="Use the accessory already in the fit as the anchor, or remove distractions and let one piece talk.",
                 ),
             ],
             strengths=[
@@ -268,37 +291,37 @@ class VisionAnalyzer:
                     detail="The outfit has enough restraint to be styled up without rebuilding from zero.",
                 ),
             ],
-            roast=FALLBACK_ROASTS[roast_level][roast_key],
+            roast=roast,
             explanation=(
-                "The outfit works as a practical base. To make it memorable, sharpen one variable: "
-                "silhouette, texture, color contrast, or accessories."
+                f"The visible {top_color} upper layer and {accent_color} accent read as a practical base, but the "
+                "fit needs a clearer silhouette, cleaner color decision, or one detail that feels deliberate."
             ),
             recommendations=[
                 Recommendation(
-                    title="Add one high-intent layer",
-                    reason="A structured outer layer gives the outfit a deliberate shape instead of a default loadout.",
+                    title=f"Fix the {top_color} layer first",
+                    reason="The biggest visible layer sets the whole outfit's tone, so it needs the cleanest shape.",
                     priority=5,
                 ),
                 Recommendation(
-                    title="Repeat one accent color",
-                    reason="Echoing a color in shoes, cap, or bag makes the look feel styled instead of accidental.",
+                    title=f"Echo the {accent_color} detail once",
+                    reason="Repeating one visible accent makes the styling look chosen instead of random.",
                     priority=4,
                 ),
                 Recommendation(
                     title="Upgrade texture contrast",
-                    reason="Mix matte, ribbed, denim, leather, or nylon textures to add depth on camera.",
+                    reason=f"The {top_color} layer needs a texture contrast so it does not flatten the whole photo.",
                     priority=3,
                 ),
             ],
             alternate_outfits=[
                 AlternateOutfit(
                     name="Streetwear patch",
-                    items=["boxy overshirt", "straight-leg denim", "clean sneakers", "small crossbody bag"],
+                    items=[f"structured {top_color} overshirt", "straight-leg denim", "clean sneakers", "one visible accessory"],
                     vibe="more intentional, less laundry-day roulette",
                 ),
                 AlternateOutfit(
                     name="Smart casual patch",
-                    items=["ribbed knit", "tailored trouser", "minimal leather sneaker", "silver watch"],
+                    items=[f"clean {top_color} knit", "tailored trouser", "minimal leather sneaker", "one sharp visible detail"],
                     vibe="date-night polish without trying too loudly",
                 ),
             ],
@@ -346,3 +369,39 @@ class VisionAnalyzer:
     def _rgb(self, color: str) -> tuple[int, int, int]:
         normalized = color.lstrip("#")
         return tuple(int(normalized[index : index + 2], 16) for index in (0, 2, 4))
+
+    def _color_name(self, color: str) -> str:
+        r, g, b = self._rgb(color)
+        max_channel = max(r, g, b)
+        min_channel = min(r, g, b)
+        spread = max_channel - min_channel
+        brightness = (r + g + b) / 3
+
+        if brightness < 35:
+            return "black"
+        if brightness > 225 and spread < 35:
+            return "white"
+        if spread < 22:
+            if brightness < 85:
+                return "charcoal"
+            if brightness < 170:
+                return "gray"
+            return "light gray"
+
+        if r > 165 and g > 135 and b < 120:
+            return "tan"
+        if r > 150 and g > 120 and b > 110 and spread < 70:
+            return "beige"
+        if r > g + 45 and r > b + 45:
+            return "red" if g < 110 else "orange"
+        if g > 120 and b > 120 and abs(g - b) < 75:
+            return "teal"
+        if g > r + 35 and g > b + 25:
+            return "green"
+        if b > r + 40 and b > g + 25:
+            return "navy" if brightness < 95 else "blue"
+        if r > 95 and b > 95 and abs(r - b) < 60 and g < max(r, b) - 25:
+            return "purple"
+        if r > 95 and g > 55 and b < 80:
+            return "brown"
+        return "muted"

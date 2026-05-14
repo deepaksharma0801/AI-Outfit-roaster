@@ -42,21 +42,21 @@ export async function fetchStyleHistory(userId = "demo-user"): Promise<StyleHist
 }
 
 const demoRoasts: Record<RoastLevel, string> = {
-  chill: "This fit is trying. It has the energy of a decent draft that still needs notes.",
-  spicy: "Bro this fit has airplane-mode confidence. It exists, but it is not connecting.",
-  brutal: "Bro what is this fit, a loading screen with shoes? The outfit is giving default settings.",
-  nuclear: "Wtf is that outfit, every piece is arguing and somehow they are all losing.",
+  chill: "That gray upper layer is trying. It has the energy of a decent draft that still needs notes.",
+  spicy: "Bro that gray top layer has airplane-mode confidence. It exists, but it is not connecting.",
+  brutal: "Bro what is that gray hoodie-coat situation? Take it off, the fit is giving default settings with sleeves.",
+  nuclear: "Wtf is that gray layer doing, bro? It looks like the hoodie and coat had an argument and both lost.",
 };
 
 const demoExplanations: Record<RoastLevel, string> = {
   chill:
-    "The base is workable, but the outfit needs one sharper focal point so it feels styled instead of merely assembled.",
+    "The base is workable, but the gray upper layer needs one sharper focal point so it feels styled instead of merely assembled.",
   spicy:
-    "The fit is not cooked beyond saving, but the silhouette and accessories need to stop acting like optional side quests.",
+    "The fit is not cooked beyond saving, but the gray top layer and visible details need to stop acting like optional side quests.",
   brutal:
-    "The outfit is not dead, but it is absolutely on life support. Pick a stronger silhouette, repeat one accent, and stop letting the accessories ghost the whole look.",
+    "The outfit is not dead, but that gray layer is absolutely on life support. Pick a stronger silhouette and make the visible accessory/detail actually anchor the look.",
   nuclear:
-    "The fit needs a full emergency patch: one hero layer, cleaner proportions, and a color decision that was made before leaving the house.",
+    "The fit needs a full emergency patch: fix the gray layer first, clean the proportions, and make one visible detail look intentional.",
 };
 
 export function demoAnalyze(
@@ -76,16 +76,16 @@ export function demoAnalyze(
     ],
     issues: [
       {
-        title: "Needs a sharper focal point",
-        detail: "The base is wearable, but no single piece is fully taking the aux.",
+        title: "That gray layer needs a real job",
+        detail: "The base is wearable, but the gray upper layer is taking up camera space without earning it.",
         severity: 3,
-        fix: "Add one high-contrast jacket, bag, or shoe shape.",
+        fix: "Make that layer sharper, crop it cleaner, or swap it for something with actual structure.",
       },
       {
-        title: "Accessory layer is undercooked",
-        detail: "The fit is asking for a cap, watch, jewelry, or bag to finish the sentence.",
+        title: "Visible details are not landing",
+        detail: "Any watch, bag, cap, or jewelry already in the photo needs to look intentional instead of decorative noise.",
         severity: 2,
-        fix: "Pick one accessory in a repeated accent color.",
+        fix: "Use the visible accessory as the anchor or simplify the fit so one detail actually hits.",
       },
     ],
     strengths: [
@@ -95,9 +95,9 @@ export function demoAnalyze(
     roast: demoRoasts[roastLevel],
     explanation: demoExplanations[roastLevel],
     recommendations: [
-      { title: "Add a technical outer layer", reason: "It gives the silhouette more architecture.", priority: 5 },
-      { title: "Repeat an accent color", reason: "Color repetition makes the outfit feel styled.", priority: 4 },
-      { title: "Increase texture contrast", reason: "Matte, ribbed, denim, or nylon layers add depth.", priority: 3 },
+      { title: "Fix the gray layer", reason: "The biggest visible piece sets the whole outfit's tone.", priority: 5 },
+      { title: "Make the visible accessory matter", reason: "If the watch or detail is already there, it needs to anchor the fit instead of floating.", priority: 4 },
+      { title: "Increase texture contrast", reason: "Matte, ribbed, denim, or nylon texture would keep the gray layer from looking flat.", priority: 3 },
     ],
     alternate_outfits: [
       {
