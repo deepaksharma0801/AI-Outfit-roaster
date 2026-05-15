@@ -44,8 +44,8 @@ export async function fetchStyleHistory(userId = "demo-user"): Promise<StyleHist
 const demoRoasts: Record<RoastLevel, string> = {
   chill: "That gray upper layer is trying. It has the energy of a decent draft that still needs notes.",
   spicy: "Bro that gray top layer has airplane-mode confidence. It exists, but it is not connecting.",
-  brutal: "Bro what is that gray hoodie-coat situation? Take it off, the fit is giving default settings with sleeves.",
-  nuclear: "Wtf is that gray layer doing, bro? It looks like the hoodie and coat had an argument and both lost.",
+  brutal: "Bro what is that gray hoodie-coat mutation? Take it off before the mirror files a complaint.",
+  nuclear: "Wtf is that gray layer, bro? It looks like a hoodie and a coat got into a custody battle and the outfit lost.",
 };
 
 const demoExplanations: Record<RoastLevel, string> = {
@@ -54,9 +54,9 @@ const demoExplanations: Record<RoastLevel, string> = {
   spicy:
     "The fit is not cooked beyond saving, but the gray top layer and visible details need to stop acting like optional side quests.",
   brutal:
-    "The outfit is not dead, but that gray layer is absolutely on life support. Pick a stronger silhouette and make the visible accessory/detail actually anchor the look.",
+    "The outfit is not dead, but that gray layer is absolutely on life support. Fix the silhouette before the whole fit gets reported as missing drip.",
   nuclear:
-    "The fit needs a full emergency patch: fix the gray layer first, clean the proportions, and make one visible detail look intentional.",
+    "The fit needs an emergency extraction: fix the gray layer first, clean the proportions, and stop letting one confused piece bully the entire photo.",
 };
 
 export function demoAnalyze(

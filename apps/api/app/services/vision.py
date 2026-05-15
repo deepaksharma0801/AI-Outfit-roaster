@@ -22,6 +22,8 @@ Analyze the outfit with useful styling intelligence and internet-native roast co
 Return only valid JSON matching the requested schema.
 The roast may be savage, direct, and slangy, but it must only attack the outfit, styling choices,
 colors, proportions, layering, accessories, and overall vibe.
+Outfit-only humiliation is allowed: make the clothes feel roasted, exposed, and embarrassed.
+Do not soften Brutal or Nuclear mode with polite phrasing.
 Never body-shame. Never insult protected classes, age, race, gender, disability, religion, sexuality,
 body type, poverty, or the person wearing the clothes. No sexual comments."""
 
@@ -46,14 +48,16 @@ ROAST_GUIDES = {
         "A little 'bro' energy is welcome, but keep it outfit-only."
     ),
     RoastLevel.brutal: (
-        "Roast level: BRUTAL. The user asked for damage. Use direct lines like 'bro what is this fit' "
-        "or 'this outfit is fighting for its life' when appropriate. Be funny, harsh, and specific. "
+        "Roast level: BRUTAL. The user asked for damage. Be rude to the clothes, not the person. "
+        "Use direct lines like 'bro what is that hoodie', 'take that coat off', or 'this fit is fighting "
+        "for its life' when appropriate. Make it funny, harsh, specific, and a little painful. "
         "Profanity is allowed sparingly. Still outfit-only, no body or identity insults."
     ),
     RoastLevel.nuclear: (
-        "Roast level: NUCLEAR. Maximum comedy violence toward the clothes. Make it quotable, ruthless, "
-        "and short enough to screenshot. Profanity is allowed sparingly. Still outfit-only, no body or "
-        "identity insults."
+        "Roast level: NUCLEAR. Maximum comedy violence toward the clothes. Make it feel like a comment "
+        "section public execution of the outfit: quotable, ruthless, and short enough to screenshot. "
+        "Use 'wtf', 'bro', 'take it off', 'delete the evidence', or similar phrasing when it fits. "
+        "Profanity is allowed sparingly. Still outfit-only, no body or identity insults."
     ),
 }
 
@@ -71,16 +75,16 @@ FALLBACK_ROASTS = {
         "bright": "That {top_color} layer said 'trust the process' and then left the group chat.",
     },
     RoastLevel.brutal: {
-        "low_contrast": "Bro what is that {top_color} upper-layer situation, a loading screen with sleeves? Take that fit back to settings.",
-        "high_contrast": "Bro that {top_color} layer and {accent_color} contrast got dressed by spinning a wheel and losing twice.",
-        "dark": "Wtf is that {top_color} upper layer, undercover couch-core? The closet rage-quit halfway through.",
-        "bright": "That {top_color} layer is loud for no reason, like it learned color theory from a warning label.",
+        "low_contrast": "Bro what is that {top_color} upper-layer situation, a loading screen with sleeves? Take it off before the mirror files a complaint.",
+        "high_contrast": "Bro that {top_color} layer next to {accent_color} looks like two bad decisions fighting for the camera. The fit lost in every direction.",
+        "dark": "Wtf is that {top_color} upper layer, undercover couch-core? Take it off, the closet clearly rage-quit halfway through.",
+        "bright": "That {top_color} layer is loud for no reason, like a warning label got promoted to stylist. The fit needs an apology note.",
     },
     RoastLevel.nuclear: {
-        "low_contrast": "Bro that {top_color} upper layer has the charisma of an unseasoned screenshot. Take it off and respawn.",
-        "high_contrast": "Wtf is that {top_color} layer doing next to {accent_color}, every piece is arguing and somehow they are all losing.",
-        "dark": "That {top_color} top layer looks assembled during a power outage. Nobody checked the fit footage.",
-        "bright": "That {top_color} layer is a visual jump scare. The palette is committing crimes with confidence.",
+        "low_contrast": "Bro that {top_color} upper layer is fashion bankruptcy with sleeves. Take it off, delete the evidence, and let the closet apologize.",
+        "high_contrast": "Wtf is that {top_color} layer doing next to {accent_color}? Every piece is arguing, the outfit is losing, and the camera deserves compensation.",
+        "dark": "That {top_color} top layer looks like it got assembled during a power outage and rejected by lost-and-found. Take it off and let the fit breathe.",
+        "bright": "That {top_color} layer is a visual jump scare. The palette is committing crimes with confidence and somehow still has no drip.",
     },
 }
 
