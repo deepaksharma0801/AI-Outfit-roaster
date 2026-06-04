@@ -1,6 +1,6 @@
 # DripJudge AI
 
-DripJudge AI is a multimodal AI fashion analysis platform for outfit uploads, style scoring, brutally funny roasts, and useful styling recommendations.
+DripJudge AI is a multimodal AI fashion analysis platform for outfit uploads, style scoring, brutally funny roasts, and useful styling recommendations
 
 This is built as a production-style monorepo rather than a toy demo. The app has a Next.js product interface, a FastAPI backend, OpenAI vision-ready analysis, deterministic local fallback analysis, Postgres/pgvector persistence hooks, Redis infrastructure, Docker Compose, and CI checks.
 
