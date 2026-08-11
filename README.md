@@ -119,7 +119,7 @@ flowchart LR
   apiService --> webApp
 ```
 
-The backend is database-first when Postgres is available. If Postgres is not running, it gracefully falls back to the in-memory history store so local demos still work.
+The backend is database-first when Postgres is available. If Postgres is not running, it gracefully falls back to the in-memory history store so local demos work
 
 ## Environment
 
